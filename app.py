@@ -24,7 +24,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 
 BASE_DIR = Path(__file__).resolve().parent
-UPLOAD_FOLDER = BASE_DIR / "static" / "uploads"
+UPLOAD_FOLDER = Path("/tmp/shareplate_uploads")
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 
 app.config.update(
