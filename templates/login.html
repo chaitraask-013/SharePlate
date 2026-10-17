@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | SharePlate</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-page">
+
+    <nav class="navbar">
+        <a href="{{ url_for('home') }}" class="brand">
+            <span class="brand-icon">✳</span>
+            shareplate<span class="brand-dot">.</span>
+        </a>
+        <a href="{{ url_for('register') }}" class="login-link">New here? Join us →</a>
+    </nav>
+
+    <main class="auth-container">
+        <section class="auth-card">
+            <a href="{{ url_for('home') }}" class="back-link">← Back to home</a>
+
+            <div class="auth-icon">✳</div>
+            <div class="eyebrow">WELCOME BACK</div>
+            <h1 class="auth-title">Good to have you here.</h1>
+            <p class="auth-description">
+                Log in to manage your donations and connect with your community.
+            </p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="auth-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <label for="email">Email address</label>
+                <input id="email" name="email" type="email"
+                       autocomplete="email" maxlength="254"
+                       placeholder="you@example.com" required>
+
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password"
+                       autocomplete="current-password"
+                       placeholder="Enter your password" required>
+
+                <button class="auth-submit" type="submit">
+                    Log in to SharePlate →
+                </button>
+            </form>
+
+            <p class="auth-switch">
+                Don't have an account?
+                <a href="{{ url_for('register') }}">Create one</a>
+            </p>
+        </section>
+
+        <p class="auth-footer">Share good food. Share good things. ✳</p>
+    </main>
+</body>
+</html>

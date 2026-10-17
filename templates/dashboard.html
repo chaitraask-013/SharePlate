@@ -1,0 +1,503 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard | SharePlate</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin: 28px 0 36px;
+        }
+
+        .stat-card {
+            padding: 22px;
+            background: #fff;
+            border: 1px solid #e6e9e1;
+            border-radius: 16px;
+            box-shadow: 0 5px 18px rgba(0, 0, 0, 0.04);
+        }
+
+        .stat-icon {
+            font-size: 25px;
+            margin-bottom: 12px;
+        }
+
+        .stat-label {
+            color: #686d66;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-number {
+            font-size: 30px;
+            font-weight: 700;
+            color: #285b3b;
+            line-height: 1.2;
+        }
+
+        .stat-help {
+            margin-top: 8px;
+            color: #858981;
+            font-size: 12px;
+        }
+
+        .dashboard-item {
+            gap: 16px;
+        }
+
+        .dashboard-item h3 {
+            margin-top: 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 20px;
+            background: #edf4eb;
+            color: #285b3b;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .request-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .request-actions button,
+        .collected-button {
+            cursor: pointer;
+        }
+
+        .secondary-button {
+            padding: 10px 18px;
+            border: 1px solid #d8d8d0;
+            border-radius: 8px;
+            background: #fff;
+            color: #333;
+            font: inherit;
+        }
+
+        .secondary-button:hover {
+            background: #f5f5f0;
+        }
+
+        .request-status {
+            margin: 10px 0;
+        }
+
+        .dashboard-message {
+            margin-top: 18px;
+        }
+
+        .dashboard-message.error {
+            color: #a3362c;
+        }
+
+        .dashboard-message.success {
+            color: #285b3b;
+        }
+
+        button:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+
+        @media (max-width: 900px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-number {
+                font-size: 25px;
+            }
+
+            .request-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body class="dashboard-page">
+
+<nav class="navbar">
+    <a href="{{ url_for('home') }}" class="brand">
+        <span class="brand-icon">✳</span>
+        shareplate<span class="brand-dot">.</span>
+    </a>
+
+    <div class="nav-actions">
+        <a href="{{ url_for('home') }}" class="login-link">Home</a>
+
+        <form action="{{ url_for('logout') }}" method="POST">
+            <button class="nav-button" type="submit">Log out ↗</button>
+        </form>
+    </div>
+</nav>
+
+<main class="dashboard-container">
+
+    <div class="eyebrow">YOUR SHAREPLATE SPACE</div>
+
+    <h1 class="dashboard-title">
+        Welcome, <span>{{ name }}</span>!
+    </h1>
+
+    {% if role == "donor" %}
+        <p class="dashboard-description">
+            Manage your donations, track requests, and see your impact.
+        </p>
+
+        <a href="{{ url_for('home') }}#donate" class="primary-button">
+            + Add a food donation
+        </a>
+
+        <h2 class="dashboard-section-title">Your impact at a glance</h2>
+
+        <section class="stats-grid">
+            <article class="stat-card">
+                <div class="stat-icon">🍱</div>
+                <div class="stat-label">Total donations</div>
+                <div class="stat-number">{{ stats.total_donations }}</div>
+                <div class="stat-help">All your recorded listings</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon">🥬</div>
+                <div class="stat-label">Available</div>
+                <div class="stat-number">{{ stats.available_donations }}</div>
+                <div class="stat-help">Visible to recipients</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-label">Pending requests</div>
+                <div class="stat-number">{{ stats.pending_requests }}</div>
+                <div class="stat-help">Awaiting your decision</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon">🤝</div>
+                <div class="stat-label">Approved requests</div>
+                <div class="stat-number">{{ stats.approved_requests }}</div>
+                <div class="stat-help">Accepted by you</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-label">Collected donations</div>
+                <div class="stat-number">{{ stats.collected_donations }}</div>
+                <div class="stat-help">Marked as collected</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon">🔒</div>
+                <div class="stat-label">Reserved</div>
+                <div class="stat-number">{{ stats.reserved_donations }}</div>
+                <div class="stat-help">Approved and awaiting collection</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon">↩️</div>
+                <div class="stat-label">Rejected requests</div>
+                <div class="stat-number">{{ stats.rejected_requests }}</div>
+                <div class="stat-help">Requests not accepted</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon">🗃️</div>
+                <div class="stat-label">Removed listings</div>
+                <div class="stat-number">{{ stats.removed_donations }}</div>
+                <div class="stat-help">No longer publicly available</div>
+            </article>
+        </section>
+
+        <h2 class="dashboard-section-title">Your donations</h2>
+
+        {% if donations %}
+            <div class="dashboard-list">
+                {% for donation in donations %}
+                    <article class="dashboard-item">
+                        <div>
+                            <h3>{{ donation["food_name"] }}</h3>
+
+                            <p>
+                                {{ donation["quantity"] }} ·
+                                {{ donation["location"] }}
+                            </p>
+
+                            <p class="dashboard-deadline">
+                                Collection deadline: {{ donation["deadline"] }}
+                            </p>
+                        </div>
+
+                        <span class="status-badge">
+                            {{ donation["status"] }}
+                        </span>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="dashboard-empty">
+                <h3>No donations yet</h3>
+                <p>Your published donations will appear here.</p>
+            </div>
+        {% endif %}
+
+        <h2 class="dashboard-section-title">Incoming food requests</h2>
+
+        {% if requests %}
+            <div class="dashboard-list">
+                {% for item in requests %}
+                    <article class="dashboard-item request-item">
+                        <div>
+                            <h3>{{ item["food_name"] }}</h3>
+
+                            <p>
+                                {{ item["quantity"] }} ·
+                                {{ item["location"] }}
+                            </p>
+
+                            <p>
+                                <strong>Requested by:</strong>
+                                {{ item["recipient_name"] }}
+                            </p>
+
+                            <p>
+                                <strong>Email:</strong>
+                                {{ item["recipient_email"] }}
+                            </p>
+
+                            <p class="dashboard-deadline">
+                                Requested on: {{ item["request_created_at"] }}
+                            </p>
+
+                            <p class="request-status">
+                                <span class="status-badge">
+                                    {{ item["request_status"] }}
+                                </span>
+                            </p>
+
+                            {% if item["request_status"] == "Requested"
+                                  and item["donation_status"] == "Available" %}
+                                <div class="request-actions">
+                                    <button type="button"
+                                            class="primary-button decision-button"
+                                            data-request-id="{{ item['request_id'] }}"
+                                            data-decision="Approved">
+                                        Approve
+                                    </button>
+
+                                    <button type="button"
+                                            class="secondary-button decision-button"
+                                            data-request-id="{{ item['request_id'] }}"
+                                            data-decision="Rejected">
+                                        Reject
+                                    </button>
+                                </div>
+
+                            {% elif item["request_status"] == "Approved" %}
+                                <button type="button"
+                                        class="primary-button collected-button"
+                                        data-request-id="{{ item['request_id'] }}">
+                                    Mark as collected
+                                </button>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="dashboard-empty">
+                <h3>No incoming requests yet</h3>
+                <p>Recipient requests will appear here.</p>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <p class="dashboard-description">
+            Find available food and track your requests and collections.
+        </p>
+
+        <a href="{{ url_for('home') }}#discover" class="primary-button">
+            Explore available food →
+        </a>
+
+        <h2 class="dashboard-section-title">Your activity at a glance</h2>
+
+        <section class="stats-grid">
+            <article class="stat-card">
+                <div class="stat-icon">📝</div>
+                <div class="stat-label">Total requests</div>
+                <div class="stat-number">{{ stats.total_requests }}</div>
+                <div class="stat-help">All requests you have made</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-label">Pending</div>
+                <div class="stat-number">{{ stats.pending_requests }}</div>
+                <div class="stat-help">Waiting for donor decisions</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon">🤝</div>
+                <div class="stat-label">Approved</div>
+                <div class="stat-number">{{ stats.approved_requests }}</div>
+                <div class="stat-help">Accepted by donors</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-label">Collected</div>
+                <div class="stat-number">{{ stats.collected_donations }}</div>
+                <div class="stat-help">Completed collections</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon">↩️</div>
+                <div class="stat-label">Rejected</div>
+                <div class="stat-number">{{ stats.rejected_requests }}</div>
+                <div class="stat-help">Requests not accepted</div>
+            </article>
+
+            <article class="stat-card">
+                <div class="stat-icon">🥬</div>
+                <div class="stat-label">Available food</div>
+                <div class="stat-number">{{ stats.available_donations }}</div>
+                <div class="stat-help">Listings you can explore</div>
+            </article>
+        </section>
+
+        <h2 class="dashboard-section-title">Your food requests</h2>
+
+        {% if requests %}
+            <div class="dashboard-list">
+                {% for item in requests %}
+                    <article class="dashboard-item request-item">
+                        <div>
+                            <h3>{{ item["food_name"] }}</h3>
+
+                            <p>
+                                Quantity: {{ item["quantity"] }} ·
+                                {{ item["location"] }}
+                            </p>
+
+                            <p>
+                                <strong>Donor:</strong>
+                                {{ item["donor_name"] or "Donor" }}
+                            </p>
+
+                            <p class="dashboard-deadline">
+                                Requested on: {{ item["request_created_at"] }}
+                            </p>
+
+                            <p class="request-status">
+                                <span class="status-badge">
+                                    {{ item["request_status"] }}
+                                </span>
+                            </p>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="dashboard-empty">
+                <div class="auth-icon">♡</div>
+                <h3>You haven't requested food yet</h3>
+                <p>Explore available donations to get started.</p>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <p id="dashboardMessage"
+       class="dashboard-message"
+       role="status"
+       aria-live="polite"></p>
+
+</main>
+
+<script>
+const dashboardMessage = document.getElementById("dashboardMessage");
+
+async function sendDashboardAction(url, body, button) {
+    dashboardMessage.textContent = "";
+    dashboardMessage.className = "dashboard-message";
+
+    const originalText = button.textContent.trim();
+    button.disabled = true;
+    button.textContent = "Please wait...";
+
+    try {
+        const options = { method: "POST", headers: {} };
+
+        if (body !== null) {
+            options.headers["Content-Type"] = "application/json";
+            options.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(url, options);
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Something went wrong.");
+        }
+
+        dashboardMessage.textContent =
+            result.message || "Updated successfully.";
+        dashboardMessage.classList.add("success");
+
+        window.setTimeout(() => window.location.reload(), 800);
+
+    } catch (error) {
+        dashboardMessage.textContent = error.message;
+        dashboardMessage.classList.add("error");
+        button.disabled = false;
+        button.textContent = originalText;
+    }
+}
+
+document.querySelectorAll(".decision-button").forEach(button => {
+    button.addEventListener("click", () => {
+        sendDashboardAction(
+            `/api/requests/${button.dataset.requestId}/decision`,
+            { decision: button.dataset.decision },
+            button
+        );
+    });
+});
+
+document.querySelectorAll(".collected-button").forEach(button => {
+    button.addEventListener("click", () => {
+        sendDashboardAction(
+            `/api/requests/${button.dataset.requestId}/collected`,
+            null,
+            button
+        );
+    });
+});
+</script>
+
+</body>
+</html>
